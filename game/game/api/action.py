@@ -1,11 +1,12 @@
 import logging
 
-import game.constants
-import game.packets
-import game.states
 from common.api_handlers import l2_request_handler
 from common.response import Response
 from common.template import Parameter, Template
+
+import game.constants
+import game.packets
+import game.states
 from game.models.world import WORLD
 
 LOG = logging.getLogger(f"l2py.{__name__}")
@@ -43,26 +44,27 @@ async def action(request):
 
 @l2_request_handler(
     game.constants.GAME_REQUEST_TARGET_CANCEL,
-    Template([
-        Parameter("unselect", start=0, length=2, type=Int16)
-    ])
+    Template([Parameter("unselect", start=0, length=2, type=Int16)]),
 )
 async def target_cancel(request):
     request.session.character.set_target(None)
-    request.session.send_packet(game.packets.TargetUnselected(
-        request.session.character.id,
-        request.session.character.position
-    ))
+    request.session.send_packet(
+        game.packets.TargetUnselected(
+            request.session.character.id, request.session.character.position
+        )
+    )
     WORLD.broadcast_target_unselect(request.session.character)
 
 
 @l2_request_handler(
     game.constants.GAME_REQUEST_ACTION_USE,
-    Template([
-        Parameter("action_id", start=0, length=4, type=Int32),
-        Parameter("with_ctrl", start=4, length=4, type=Int32),
-        Parameter("with_shift", start=8, length=4, type=Int32),
-    ])
+    Template(
+        [
+            Parameter("action_id", start=0, length=4, type=Int32),
+            Parameter("with_ctrl", start=4, length=4, type=Int32),
+            Parameter("with_shift", start=8, length=4, type=Int32),
+        ]
+    ),
 )
 async def action_use(request):
     action = request.validated_data["action_id"]
@@ -78,9 +80,7 @@ async def action_use(request):
         case game.constants.ACTION_SIT:
             character.status.is_sitting = not character.status.is_sitting
             packet = game.packets.ChangeWaitType(
-                character.id,
-                Bool(not character.status.is_sitting),
-                character.position
+                character.id, Bool(not character.status.is_sitting), character.position
             )
             WORLD.broadcast(character, packet)
         case game.constants.ACTION_FAKE_DEATH_START:
@@ -93,19 +93,21 @@ async def action_use(request):
 
 @l2_request_handler(
     game.constants.GAME_REQUEST_SOCIAL_ACTION,
-    Template([
-        Parameter("action_id", start=0, length=4, type=Int32),
-    ])
+    Template(
+        [
+            Parameter("action_id", start=0, length=4, type=Int32),
+        ]
+    ),
 )
 async def social_action(request):
     action_id = request.validated_data["action_id"]
-    character= request.session.character
+    character = request.session.character
 
     if action_id in game.constants.PUBLIC_SOCIAL_ACTIONS:
         WORLD.broadcast(
-            request.session.character, 
+            request.session.character,
             game.packets.SocialAction(
                 character.id,
                 action_id,
-            )
+            ),
         )

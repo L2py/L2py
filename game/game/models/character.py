@@ -4,11 +4,13 @@ from dataclasses import dataclass, field
 
 from common.dataclass import BaseDataclass
 from common.document import Document, DocumentDefaults
-from game.models.structures.character.character import Character as CharacterStructure
-from game.models.structures.character.character import CharacterBase as CharacterBaseStructure
-from game.models.structures.character.character import (
-    CharacterDefaults as CharacterDefaultsStructure,
-)
+from common.models import IDFactory
+from game.models.structures.character.character import \
+    Character as CharacterStructure
+from game.models.structures.character.character import \
+    CharacterBase as CharacterBaseStructure
+from game.models.structures.character.character import \
+    CharacterDefaults as CharacterDefaultsStructure
 from game.models.structures.character.status import Status
 from game.models.structures.character.template import CharacterTemplate
 from game.models.structures.item.inventory import Inventory
@@ -66,7 +68,7 @@ class Character(
         return await super().all(add_query={"account_username": account_username}, **kwargs)
 
     @classmethod
-    def from_template(
+    async def from_template(
         cls, template: CharacterTemplate, name, account, sex, race, face, hair_style, hair_color
     ):
 
@@ -79,7 +81,7 @@ class Character(
         position = Position(point3d=template.spawn)
 
         return cls(
-            id=Int32.random(),
+            id=await IDFactory.get_new_id(IDFactory.NAME_CHARACTERS),
             account_username=account.username,
             is_visible=True,
             name=name,
